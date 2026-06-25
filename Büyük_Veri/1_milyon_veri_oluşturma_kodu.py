@@ -1,0 +1,416 @@
+import numpy as np
+import pandas as pd
+from faker import Faker
+import time
+import random
+import secrets
+
+
+def siralı_ve_tam_uyumlu_veri_uret(adet=1000000):
+    print(f"👉 Görsellerdeki 3 tabloyla %100 uyumlu, yüksek çeşitlilikte {adet:,} satırlık veri üretiliyor...")
+    baslangic_zamani = time.time()
+    fake = Faker('tr_TR')
+
+    # ---------------------------------------------------------
+    # 1. GÖRSELLERDEKİ YARDIMCI VERİ HAVUZLARININ TANIMLANMASI
+    # ---------------------------------------------------------
+    # Görsel 1: Suç Kaydı Havuzu
+    suc_id_listesi = ['C', 'D', 'ES', 'G', 'H', 'K', 'MZV', 'T', 'U', 'Y']
+
+    # Görsel 2: Göz Renkleri Havuzu (1-6 arası)
+    goz_id_listesi = [1, 2, 3, 4, 5, 6]
+
+    # Görsel 3: Kan Grupları Havuzu (0-7 arası)
+    kan_id_listesi = [0, 1, 2, 3, 4, 5, 6, 7]
+
+    # ---------------------------------------------------------
+    # 2. %100 BENZERSİZ VE DENGELİ T.C. ÜRETİMİ
+    # ---------------------------------------------------------
+    print("-> Dağıtık ve benzersiz T.C. havuzu oluşturuluyor...")
+    tc_set = set()
+    np.random.seed(int(time.time() * 1000) % 2 ** 32)
+
+    while len(tc_set) < adet:
+        eksik_sayisi = adet - len(tc_set)
+        gecici_boyut = int(eksik_sayisi * 1.3)
+
+        d1 = np.random.randint(1, 10, size=gecici_boyut)
+        d2 = np.random.randint(0, 10, size=gecici_boyut)
+        d3 = np.random.randint(0, 10, size=gecici_boyut)
+        d4 = np.random.randint(0, 10, size=gecici_boyut)
+        d5 = np.random.randint(0, 10, size=gecici_boyut)
+        d6 = np.random.randint(0, 10, size=gecici_boyut)
+        d7 = np.random.randint(0, 10, size=gecici_boyut)
+        d8 = np.random.randint(0, 10, size=gecici_boyut)
+        d9 = np.random.randint(0, 10, size=gecici_boyut)
+
+        tekler = d1 + d3 + d5 + d7 + d9
+        ciftler = d2 + d4 + d6 + d8
+        d10 = ((tekler * 7) - ciftler) % 10
+        d11 = (d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10) % 10
+
+        üretilen_blok = (d1.astype(str) + d2.astype(str) + d3.astype(str) + d4.astype(str) + d5.astype(str) +
+                         d6.astype(str) + d7.astype(str) + d8.astype(str) + d9.astype(str) + d10.astype(
+                    str) + d11.astype(str))
+        tc_set.update(üretilen_blok)
+
+    tc_nolar = list(tc_set)[:adet]
+    random.seed(time.time())
+    random.shuffle(tc_nolar)
+
+    # ---------------------------------------------------------
+    # 3. DEV İSİM VE SOYİSİM HAVUZLARI (Maksimum Çeşitlilik)
+    # ---------------------------------------------------------
+    print("-> Genişletilmiş ad-soyad kombinasyon havuzları dolduruluyor...")
+    genis_isim_havuzu = list(set([fake.first_name() for _ in range(50000)]))
+    genis_soyisim_havuzu = list(set([fake.last_name() for _ in range(50000)]))
+
+    isimler = np.random.choice(genis_isim_havuzu, size=adet)
+    soyisimler = np.random.choice(genis_soyisim_havuzu, size=adet)
+
+    # ---------------------------------------------------------
+    # 4. GÖRSELLERE GÖRE İLİŞKİSEL SEÇİMLER VE DİĞER VERİLER
+    # ---------------------------------------------------------
+    print("-> Görsellerdeki Foreign Key bağları kuruluyor...")
+    goz_secimleri = np.random.choice(goz_id_listesi, size=adet)
+    suc_kayit_idleri = np.random.choice(suc_id_listesi, size=adet)
+    kan_grubu_idleri = np.random.choice(kan_id_listesi, size=adet)
+
+    dogum_yillari = np.random.randint(1950, 2011, size=adet)
+    boylar = np.random.randint(145, 206, size=adet)
+    kilolar = np.random.randint(40, 140, size=adet)
+    ayak_numaralari = np.random.randint(35, 55, size=adet).astype(str)
+    plakalar = np.random.randint(1, 82, size=adet)
+
+    print("-> Kriptografik parmak izleri mühürleniyor...")
+    parmak_izleri = [secrets.token_hex(64) for _ in range(adet)]
+
+    print("-> Benzersiz DNA zincirleri haritalanıyor...")
+    dna_set = set()
+    while len(dna_set) < adet:
+        eksik = adet - len(dna_set)
+        parcalar = np.random.choice(['A', 'T', 'G', 'C'], size=(int(eksik * 1.1), 25))
+        for p in parcalar:
+            dna_set.add("".join(p))
+    dnalar = list(dna_set)[:adet]
+
+    ozellik_havuzu = [
+        # ==========================================
+        # 1. YARA, KESİK VE YANIK İZLERİ (1-60)
+        # ==========================================
+        "Sağ kaşta yara izi.", "Sol bilekte jilet izleri.", "Alnında eski yara izi.", "Sol yanakta derin bıçak izi.",
+        "Sağ yanağında çizik şeklinde iz.", "Çenesinde dikiş izi.", "Sol kaşın bitişinde dikiş izi.",
+        "Sağ şakakta yara izi.",
+        "Sol kulak arkasında kesik izi.", "Ensesinde yatay yara izi.", "Burun köprüsünde kırık izi.",
+        "Dudağında eski patlak izi.",
+        "Sağ avuç içinde derin kesik izi.", "Sol dirseğinde kabuk bağlamış iz.", "Sağ diz kapağında düşme izi.",
+        "Sol şakakta beyaz renkli yara izi.",
+        "Çene altında eski yanık izi.", "Sağ kulak memesinde yırtık izi.", "Sol omuz başında jilet izi.",
+        "Göğüs kafesinde derin yara izi.",
+        "Sol şakakta yatay jilet izi.", "Sağ el üstünde derin kesik izi.", "Burun sol kanadında çizik izi.",
+        "Sol avuç içinde eski dikiş izi.",
+        "Sağ dirsek iç kısımda yara lekesi.", "Ense kökünde yuvarlak yara izi.", "Sol diz kapağında eski yara izi.",
+        "Sağ baldırda derin kesik izi.",
+        "Göğüs ortasında eski yanık lekesi.", "Sol omuz arkasında faça izi.", "Sağ bilekte derin faça izi.",
+        "Çene ucunda yatay yara çizgisi.",
+        "Sol kulak arkasında dikiş lekesi.", "Sağ şakakta eski darbe izi.", "Burun kökünde dikiş izi.",
+        "Sol avuç dış kenarında yara izi.",
+        "Sağ ayak bileğinde dikiş izi.", "Sol ön kolda dikey kesik çizgisi.", "Sağ alt kolda eski yanık izi.",
+        "Sol omuz başında dikiş izi.",
+        "Alnın sağ tarafında dikey yara izi.", "Sol yanakta yuvarlak yara lekesi.", "Sağ kulak memesinde kesik izi.",
+        "Çene sağ yanında dikiş izi.",
+        "Sol el üstünde sigara yanığı izi.", "Sağ bilek iç kısımda yara çizgisi.", "Ensenin solunda eski yara izi.",
+        "Sol şakakta dikey dikiş çizgisi.",
+        "Sağ avuç içinde eski faça izi.", "Sol diz arkasında yara lekesi.", "Sağ omuzda eski haşlanma/yanık izi.",
+        "Sol bacakta derin faça çizgisi.",
+        "Dudak sol köşesinde eski çatlak izi.", "Sağ yanak kemiği üzerinde yara izi.",
+        "Burun ucunda küçük kesik çizgisi.", "Sol kulak kıkırdağında kesik izi.",
+        "Sağ ön kolda enine yara çizgisi.", "Sol el bileğinde dairesel yara izi.", "Ensenin sağında dikiş lekesi.",
+        "Sağ şakakta eski dikiş izi.",
+
+        # ==========================================
+        # 2. DÖVMELER VE KALICI SEMBOLLER (61-120)
+        # ==========================================
+        "Sol bilekte dövme.", "Sağ kolda aşiret sembolü dövme.", "Boynun sağ tarafında barkod dövmesi.",
+        "Sırtında kartal figürlü dövme.",
+        "Sol omuzda büyük ejderha dövmesi.", "Sağ el bileğinde sonsuzluk işareti dövmesi.",
+        "Sol el parmaklarında yazı şeklinde dövme.", "Göğsünde pençe izi şeklinde dövme.",
+        "Ensesinde pusula dövmesi.", "Sağ ayak bileğinde zincir dövmesi.", "Sol ön kolda kurukafa dövmesi.",
+        "Sağ omuz arkasında tribal dövme.",
+        "Her iki bileğinde kelepçe şeklinde dövme.", "Sol şakakta küçük yıldız dövmesi.",
+        "Sağ alt kolda kurt kafası dövmesi.", "Sol el başparmak üzerinde harf dövmesi.",
+        "Boynunda zincir şeklinde dövme.", "Sırtında büyük bir kanat dövmesi.", "Sol bacağında geometrik dövme.",
+        "Sağ bileğinde saat şeklinde dövme.",
+        "Sol el bileğinde harf dövmesi.", "Sağ alt kolda ay yıldız dövmesi.", "Boynun solunda gül dövmesi.",
+        "Sırtında kurt figürlü dövme.",
+        "Sol omuzda eski kabile dövmesi.", "Sağ ön kolda aslan kafası dövmesi.",
+        "Sol el parmak eklemlerinde nokta dövmeler.", "Göğsün sağında yazı dövmesi.",
+        "Ense kökünde göz figürlü dövme.", "Sağ ayak bileğinde tribal dövme.", "Sol alt kolda göz figürü dövmesi.",
+        "Sağ omuzda kuş figürlü dövme.",
+        "Sol bilekte tel örgü şeklinde dövme.", "Sağ şakakta küçük hilal dövmesi.", "Sol ön kolda akrep dövmesi.",
+        "Sağ el başparmağında haç/artı dövmesi.",
+        "Boyun arkasında kanat dövmesi.", "Sırtın solunda anka kuşu dövmesi.", "Sol baldırda geometrik dövme.",
+        "Sağ ön kolda sarmaşık dövmesi.",
+        "Sol el üstünde kuru kafa dövmesi.", "Sağ bilekte örümcek ağı dövmesi.", "Boynun sağında küçük nota dövmesi.",
+        "Sırtın sağında kaplan dövmesi.",
+        "Sol omuzda minimalist dövme.", "Sağ alt kolda büyük harfli yazı dövmesi.",
+        "Sol el orta parmağında yüzük şeklinde dövme.", "Göğsün solunda kalp dövmesi.",
+        "Ensede ejderha kuyruğu dövmesi.", "Sağ bacakta dikey yazı dövmesi.", "Sol ön kolda pusula ve harita dövmesi.",
+        "Sağ omuz başında alev dövmesi.",
+        "Sol el serçe parmağında çizgi dövme.", "Sağ şakakta küçük pusula iğnesi dövmesi.",
+        "Boynun tamamında büyük tribal dövme.", "Sırtın ortasında büyük hançer dövmesi.",
+        "Sol ayak bileğinde halhal dövmesi.", "Sağ alt kolda mekanik dişli dövmesi.",
+        "Sol omuz arkasında melek figürü dövmesi.", "Göğüs ortasında çift başlı kartal dövmesi.",
+
+        # ==========================================
+        # 3. AMELİYAT VE TIBBİ OPERASYON İZLERİ (121-180)
+        # ==========================================
+        "Ameliyat izi (sağ karın).", "Sol dizde dikine ameliyat izi.", "Apandisıt ameliyatı izi.",
+        "Sağ omuzda platin/ameliyat izi.",
+        "Boyun ön kısımda yatay ameliyat çizgisi.", "Sol bilekte karpal tünel ameliyat izi.",
+        "Sırt omurgasında dikine uzun ameliyat izi.", "Sağ göğüs altında ameliyat dikişleri.",
+        "Sol kalçada protez dikiş izi.", "Karnın ortasında dikine büyük ameliyat izi.",
+        "Sağ ayak bileğinde platin izi.", "Sol dirsek dış kısımda dikiş izleri.",
+        "Çene kemiği kenarında estetik dikiş izi.", "Sağ kasık bölgesinde ameliyat izi.",
+        "Sol baldırlarda varis ameliyatı izi.", "Sağ el bileğinde eski dikiş izleri.",
+        "Göğüs ortasında açık kalp ameliyatı izi.", "Sol omuz arkasında eski dikiş yeri.",
+        "Sağ diz yanında artroskopi delik izleri.", "Ense kökünde kist ameliyatı izi.",
+        "Sağ alt karında fıtık ameliyatı izi.", "Sol diz kapağında yatay ameliyat çizgisi.",
+        "Sağ böbrek hizasında cerrahi kesik izi.", "Sol omuzda eski kırık ameliyatı dikişleri.",
+        "Boyun sol yanında dikey cerrahi iz.", "Sağ el bileğinde karpal tünel dikiş izi.",
+        "Sırtın sağında kürek kemiği altında ameliyat çizgisi.", "Sol göğüs altında dren deliği izi.",
+        "Sağ kalçada kalça protezi dikiş yeri.", "Karnın solunda eski cerrahi kesik izi.",
+        "Sol ayak bileğinde platin ameliyat çizgisi.", "Sağ dirsek dış yanda ameliyat lekesi.",
+        "Çene altında kist operasyonu dikiş izi.", "Sol kasık bölgesinde fıtık ameliyatı izi.",
+        "Sağ baldırda cerrahi dikiş dikey çizgisi.", "Sol el bileğinde eski cerrahi izler.",
+        "Göğüs kafesi sol yanda baypas dikişleri.", "Sağ omuz arkasında platin operasyon izi.",
+        "Sol diz önünde çapraz bağ ameliyat çizgisi.", "Ense sol yanında cerrahi operasyon dikişi.",
+        "Sağ üst karında safra kesesi ameliyat izi.", "Sol diz kapağı altında iki adet delik izi.",
+        "Sağ böbrek bölgesinde dikey cerrahi dikiş.", "Sol omuz üstünde köprücük kemiği ameliyat izi.",
+        "Boyun sağ yanda eski cerrahi çizgi.", "Sağ el ayasında tendon ameliyatı dikiş izi.",
+        "Sırtın solunda kürek kemiği yanında dikey ameliyat izi.", "Sol göğüs üstünde pacemaker (pil) operasyon izi.",
+        "Sağ uyluk kemiği üzerinde uzun ameliyat dikişi.", "Karnın sağ üstünde eski dren izi.",
+        "Sol ayak tarak kemiğinde ameliyat çizgisi.", "Sağ dirsek iç kısımda dikiş izi.",
+        "Çene sol kenarında çene cerrahisi dikiş izi.", "Sağ kalça üstünde platin ameliyat izi.",
+        "Sol baldır arkasında cerrahi dikiş lekesi.", "Sağ el başparmak kökünde ameliyat izi.",
+        "Göğüs kafesi sağ yanda eski ameliyat deliği.", "Sol omuz başında köprücük kemiği dikiş çizgisi.",
+        "Sağ diz yanal bağ ameliyat izi.", "Ense sağ yanda yağ bezesi ameliyat izi.",
+
+        # ==========================================
+        # 4. BENLER, ÇİLLER VE CİLT LEKELERİ (181-240)
+        # ==========================================
+        "Boyunda belirgin ben.", "Yüzünde yoğun çiller.", "Sol yanakta et beni.", "Sağ göz altında küçük siyah ben.",
+        "Alnın ortasında belirgin doğum lekesi.", "Sağ omuz başında büyük kahverengi leke.",
+        "Sol kulak önünde belirgin ben.", "Çene ucunda ikiz et beni.",
+        "Dudak üstünde sol tarafta ben.", "Sağ yanakta belirgin doğum lekesi.", "Ensesinde büyük et beni.",
+        "Sol ön kolda kılcal damar lekesi.",
+        "Sırtında yaygın güneş lekeleri.", "Sağ şakakta belirgin et beni.", "Sol göz kapağında küçük ben.",
+        "Burun ucunda nokta şeklinde ben.",
+        "Gerdanında çok sayıda küçük ben.", "Sağ kulak arkasında kahverengi doğum lekesi.",
+        "Sol uyluk kemiği üzerinde leke.", "Sağ el ayasında koyu renkli ben.",
+        "Boynun solunda kahverengi ben.", "Yanaklarında ve burnunda yoğun çiller.", "Sağ yanakta büyük et beni.",
+        "Sol göz kenarında küçük siyah ben.",
+        "Alnın sol tarafında şarap lekesi tarzı doğum lekesi.", "Sol omuz başında geniş kahverengi leke.",
+        "Sağ kulak önünde çıkıntılı et beni.", "Çene sol yanında küçük ben.",
+        "Dudak altında sağ tarafta belirgin ben.", "Sol yanakta açık renkli doğum lekesi.",
+        "Ense sol yanda ikiz et beni.", "Sağ ön kolda geniş kahverengi leke.",
+        "Sırtın üst kısmında yoğun güneş lekeleri.", "Sol şakakta koyu renkli et beni.",
+        "Sağ göz kapağında milia (beyaz ben).", "Burun sağ kanadında küçük siyah ben.",
+        "Gerdanın sağında belirgin et beni.", "Sol kulak arkasında siyah doğum lekesi.",
+        "Sağ uyluk üzerinde koyu renkli leke.", "Sol el ayasında küçük siyah ben.",
+        "Boynun sağında et beni.", "Alın ve şakak bölgesinde hafif çiller.", "Sol yanak alt kenarında et beni.",
+        "Sağ göz pınarında küçük ben.",
+        "Alnın sağında pigment kaybı lekesi.", "Sağ kürek kemiğinde büyük doğum lekesi.",
+        "Sol kulak memesinde küçük et beni.", "Çene sağ ucunda küçük siyah ben.",
+        "Dudak üstünde sağ tarafta ben.", "Sağ el bileğinde kahverengi doğum lekesi.", "Ense sağ yanda büyük et beni.",
+        "Sol ön kolda doğum lekesi.",
+        "Sırtın alt kısmında yaygın lekeler.", "Sağ şakakta koyu renkli ben.", "Sol göz altında et beni.",
+        "Burun sol kanadında küçük et beni.",
+        "Gerdanın solunda et beni.", "Sağ kulak memesinin arkasında koyu ben.", "Sol diz üstünde kahverengi leke.",
+        "Sağ el üstünde belirgin et beni.",
+
+        # ==========================================
+        # 5. UZUV, EKLEM VE İSKELET ANOMALİLERİ (241-300)
+        # ==========================================
+        "Sol el parmak eksikliği.", "Sağ el serçe parmağı ampute (kesik).", "Sol ayak başparmağı eksik.",
+        "Sağ kulak memesi yok.",
+        "Sol el işaret parmağı bükülmüyor.", "Sağ kol sol kola göre hafif kısa.",
+        "Sol ayağında içe basma problemi var.", "Sağ el başparmağı tırnağı şekilsiz.",
+        "Sol kulak kepçesinde belirgin şekil bozukluğu.", "Burun kemiğinde sağa doğru belirgin eğrilik.",
+        "Omurgasında hafif kamburluk (skolyoz).", "Sağ el orta parmak eklemi şiş.",
+        "Sol bacakta hafif kısalık/topallama.", "Dudak yapısında yarık (tavşan dudak) izi.",
+        "Sağ el parmakları yapışık (perdeli).", "Sol omuz sağ omuza göre daha düşük.",
+        "Diş yapısında üst ön dişler eksik.", "Çene yapısı belirgin şekilde önde.",
+        "Sağ ayak parmaklarında şekil bozukluğu.", "Sol el bileği tam dönmüyor.",
+        "Sağ el parmak eksikliği.", "Sol el yüzük parmağı yarım.", "Sağ ayak serçe parmağı ampute.",
+        "Sol kulak memesi yapışık ve şekilsiz.",
+        "Sağ el işaret parmağı tam kapanmıyor.", "Sol kol sağ kola göre hafif kısa.",
+        "Sağ ayağında dışa basma problemi var.", "Sol el başparmak tırnağı eksik.",
+        "Sağ kulak kepçesinde büzüşme/şekil bozukluğu.", "Burun kemiğinde sola doğru belirgin eğrilik.",
+        "Sırtında hafif kamburluk.", "Sol el orta parmak eklemi eğri.",
+        "Sağ bacakta hafif topallama.", "Dudak üstünde yarık ameliyatı izi.",
+        "Sol el parmakları arasında hafif perdelik.", "Sağ omuz sol omuza göre daha düşük.",
+        "Diş yapısında alt ön dişler eksik.", "Çene yapısı belirgin şekilde geride.",
+        "Sol ayak parmaklarında pençe ayak anomalisi.", "Sağ el bileği bükülmüyor.",
+        "Sol el serçe parmağı eksik.", "Sağ el yüzük parmağı eklemden kesik.", "Sol ayak serçe parmağı eksik.",
+        "Her iki kulak memesi de yok.",
+        "Sol el orta parmağı tam açılmıyor.", "Sağ bacak sol bacağa göre hafif kısa.",
+        "Her iki ayakta düz tabanlık var.", "Sağ el işaret parmağı tırnağı batık/bozuk.",
+        "Sol kulak kıkırdağında karnabahar kulak deformasyonu.", "Burun ucunda çatallı/ikiye bölünmüş yapı.",
+        "Boyun omurlarında sağa doğru eğrilik.", "Sağ el serçe parmağı eğri.",
+        "Sol bacakta kalça çıkığı kaynaklı aksama.", "Üst çene kemiği asimetrik/önde.",
+        "Sağ el parmakları kalın ve boğumlu.", "Sol omuzda köprücük kemiği çıkıntısı.",
+        "Dişlerinde belirgin çapraşıklık/eğrilik.", "Çene ucu asimetrik/sağa kayık.",
+        "Sağ ayak başparmağında bunyon (kemik çıkıntısı).", "Sol el bileğinde hareket kısıtlılığı.",
+
+        # ==========================================
+        # 6. KONUŞMA, DAVRANIŞ VE TİKLER (301-360)
+        # ==========================================
+        "Kekemelik mevcut.", "Konuşurken sürekli göz kırpma tiki var.", "Sağ elinde sürekli titreme var (tremor).",
+        "Konuşurken kelimeleri yayıyor.",
+        "Hızlı konuşuyor, anlaşılması zor.", "Sol omzunu sürekli yukarı silken tik mevcut.",
+        "Konuşurken pelteklik var (R harflerini söyleyemiyor).", "Sert ve kalın bir ses tonu var.",
+        "Sürekli boğaz temizleme tiki var.", "Konuşurken dudaklarını yalıyor.",
+        "Yüzünde ara sıra seğirme (tik) oluşuyor.", "Çok kısık ve fısıltılı konuşuyor.",
+        "Sağ gözünü sık sık kırpıyor.", "Konuşurken sürekli ellerini kullanıyor.", "Kelimelerin sonunu kekeliyor.",
+        "Nefes nefese konuşma eğilimi var.",
+        "Sola doğru hafif boyun eğme tiki var.", "Konuşurken ıslık benzeri ses çıkarıyor.",
+        "Sürekli dişlerini gıcırdatıyor.", "Aksanlı/yöresel konuşuyor.",
+        "Hafif düzeyde kekemelik var.", "Konuşurken sol gözünü kırpma tiki var.", "Sol elinde hafif titreme var.",
+        "Konuşurken kelimeleri çok hızlı geçiyor.",
+        "Çok yavaş ve duraksayarak konuşuyor.", "Sağ omzunu yukarı silken tik mevcut.",
+        "Konuşurken S harflerini ıslıklı çıkarıyor.", "İnce ve tiz bir ses tonu var.",
+        "Sürekli burnunu çekme tiki var.", "Konuşurken alt dudağını ısırıyor.",
+        "Sağ yanak kasında istemsiz seğirme oluyor.", "Çok yüksek sesle konuşuyor.",
+        "Sol gözünü sık sık kırpıyor.", "Konuşurken kollarını çok hareket ettiriyor.",
+        "Kelimelerin başındaki harfleri uzatıyor.", "Derin nefes alarak konuşma hilesi var.",
+        "Sağa doğru boyun bükme tiki var.", "Konuşurken çenesini öne fırlatıyor.",
+        "Sürekli dudak kenarlarını geren tik var.", "Trakya aksanıyla konuşuyor.",
+        "Heyecanlanınca kekeliyor.", "Konuşurken her iki gözünü birden kırpıyor.", "Her iki elinde hafif titreme var.",
+        "Konuşurken kelimeleri yutuyor.",
+        "Monoton ve duygusuz bir ses tonuyla konuşuyor.", "Başını sürekli öne doğru sallayan tik mevcut.",
+        "Konuşurken argolu kelimeler kullanıyor.", "Boğuk ve hırıltılı bir ses tonu var.",
+        "Sürekli gözlerini kaçırma tiki var.", "Konuşurken ellerini cebinden çıkarmıyor.",
+        "Cümle aralarında sürekli 'yani' kelimesini tekrarlıyor.", "Nefes darlığı varmış gibi kesik konuşuyor.",
+        "Sol kaşını sürekli yukarı kaldıran tik var.", "Konuşurken sürekli dilini dışarı çıkarıyor.",
+        "Sürekli parmak çıtlatma tiki var.", "Doğu şivesiyle konuşuyor.",
+        "Stres anında kekeliyor.", "Konuşurken ağzını sağa doğru eğen tik var.",
+        "Sağ el işaret parmağında sürekli sallama tiki var.", "Konuşurken ses tonu sürekli değişiyor.",
+
+        # ==========================================
+        # 7. PROTEZLER, AKSESUARLAR VE TIBBİ CİHAZLAR (361-410)
+        # ==========================================
+        "Gözlük kullanıyor.", "Sağ kulağında işitme cihazı var.", "Dişlerinde tel (braket) mevcut.",
+        "Sol gözünde protez var.",
+        "Sağ bacağında dizlik/destek mekanizması.", "Sol elinde medikal bileklik var.",
+        "Dişlerinde altın kaplama/kaplama diş var.", "Numaralı kalın camlı gözlük takıyor.",
+        "Sağ gözünde beyaz lens/perde var.", "Boyunluk (medikal) kullanıyor.",
+        "Dişlerinde belirgin gümüş dolgular var.", "Sol kulağında çift küpe deliği.",
+        "Sağ kaşında piercing deliği izi.", "Burnunda piercing deliği izi.", "Alt dudağında piercing izi.",
+        "Sol elinde sargı bezi mevcut.",
+        "Dereceli ince çerçeveli gözlük kullanıyor.", "Sol kulağında işitme cihazı var.",
+        "Üst dişlerinde şeffaf plak mevcut.", "Sağ gözünde protez var.",
+        "Sol bacağında varis çorabı/tıbbi sargı.", "Sağ el bileğinde ortopedik elcik.",
+        "Ön dişlerinden biri tamamen porselen kaplama.", "Kemik çerçeveli gözlük takıyor.",
+        "Sol gözünde katarakt kaynaklı beyaz perde var.", "Bel fıtığı korsesi kullanıyor.",
+        "Arka dişlerinde çok sayıda dolgu var.", "Sağ kulağında hızma deliği.",
+        "Sol kaşında piercing izi.", "Dudağının sağ üstünde piercing deliği.", "Dilinde piercing mevcut.",
+        "Sağ elinde kalıcı sargı/athel var.",
+        "Güneş gözlüğünü sürekli takıyor.", "Her iki kulağında da işitme cihazı var.", "Alt dişlerinde diş teli var.",
+        "Sol gözünde renkli tıbbi lens var.",
+        "Sağ dizinde elastik bandaj mevcut.", "Sol bileğinde bakır bileklik var.", "Ön iki dişi tamamen implant.",
+        "Yuvarlak çerçeveli gözlük kullanıyor.",
+        "Sağ göz kapağında düşüklük için aparat var.", "Medikal dizlik kullanıyor.",
+        "Üst çenesinde hareketli protez diş var.", "Sağ kulak kıkırdağında üç küpe deliği.",
+
+        # ==========================================
+        # 8. SAÇ, SAKAL VE KIL YAPISI ÖZELLİKLERİ (411-440)
+        # ==========================================
+        "Saçlarında erken beyazlama var.", "Saç dökülmesi var (tepesi tamamen kel).",
+        "Sakalında bölgesel saç kıran var.", "Kaşları ortada birleşik (tek kaş).",
+        "Bıyıkları çok gür ve aşağı sarkık.", "Saçları uzun ve arkadan bağlı.",
+        "Sakal ve bıyığı tamamen tıraşlı (sinekaydı).", "Saçlarının önü tamamen dökülmüş.",
+        "Saçları tamamen beyazlamış.", "Sadece şakaklarında beyaz saçlar var.", "Çene ucunda top sakal mevcut.",
+        "Kirli sakallı ve bıyıksız.",
+        "Saçları aşırı kıvırcık ve kabarık.", "Kaşları normalden çok gür ve kalın.",
+        "Bıyıkları burularak yukarı kaldırılmış (pala bıyık).", "Saçları kazınmış (sıfır numara).",
+        "Saçında bölgesel beyaz leke var (albinizm).", "Sakalında beyaz çizgiler şeklinde beyazlama var.",
+        "Çember sakallı (bıyıksız gür sakal).", "Kaşlarının uç kısımları dökük/yok.",
+        "Bıyıkları ince ve kalem şeklinde kırpılmış.", "Saçları rasta yapılmış.", "Sadece bıyığı var (sakal tıraşlı).",
+        "Saçları dik ve jöleli.",
+        "Saçlarının sağ tarafı kazınmış asimetrik model.", "Saç ve sakalları birbirine karışmış gür yapı.",
+        "Kısa keçi sakalı mevcut.", "Kaşları cılız ve neredeyse belirsiz.",
+        "Bıyıkları dudak hizasını kapatacak kadar uzun.", "Saçları arkaya doğru taranmış gür yapıda.",
+
+        # ==========================================
+        # 9. GÖZ, BAKIŞ VE ASİMETRİ ÖZELLİKLERİ (441-470)
+        # ==========================================
+        "Sağ gözü hafif şehla.", "Sol gözünde hafif şaşılık mevcut.", "Sağ göz kapağında belirgin düşüklük (ptozis).",
+        "Gözleri birbirinden belirgin şekilde uzak.",
+        "Göz bebeklerinin boyutu birbirinden farklı.", "Sol gözü sağ gözüne göre daha küçük.",
+        "Bakışları sabit ve donuk (ifadesiz).", "Sağ gözünü tam açamıyor.",
+        "Göz altlarında mor halkalar belirgin.", "Sol göz kapağında şişlik/kist lekesi.", "Sağ gözü hafif dışa kayık.",
+        "Sol gözü hafif şehla.",
+        "Sağ gözünde hafif şaşılık mevcut.", "Sol göz kapağında belirgin düşüklük.",
+        "Gözleri yüzüne göre çok küçük ve çukurda.", "Göz bebeklerinde renk farklılığı var (heterokromi).",
+        "Sağ gözü sol gözüne göre daha küçük.", "Gözlerini sürekli kısarak bakıyor.", "Sol gözünü tam kapatamıyor.",
+        "Sağ göz altında kalıcı torbalanma var.",
+        "Sağ göz kapağında et beni benzeri siğil var.", "Sol gözü hafif içe kayık.",
+        "Gözleri patlak ve dışa fırlamış gibi (tiroid kaynaklı).", "Sol göz kapağında eski dikiş izi.",
+        "Sağ göz çevresinde tik kaynaklı sürekli kırpışma.", "Bakışları aşırı hareketli ve güvensiz.",
+        "Sol göz bebeğinde leke var.", "Her iki göz kapağında da düşüklük var.",
+        "Gözleri çekik yapıda (asya tipi).", "Sağ göz pınarında et büyümesi var.",
+
+        # ==========================================
+        # 10. ANTROPOLOJİK VE DİĞER YÜZ NİTELİKLERİ (471-500)
+        # ==========================================
+        "Cildinde belirgin vitiligo (beyaz lekeler) var.", "Alnında derin yaşlılık çizgileri var.",
+        "Burnu normalden çok büyük ve kemikli.", "Kulakları belirgin şekilde kepçe.",
+        "Sağ yanağında belirgin gamze var.", "Her iki yanağında derin gamzeler.", "Cildi aşırı soluk ve beyaz.",
+        "Sol şakağında damar şişliği var.",
+        "Yüzünde derin sivilce (akne) izleri var.", "Cildinde yaygın egzama/kızarıklık var.",
+        "Sağ yanağında eski bir çıban izi.", "Çene kemiği hattı aşırı keskin ve köşeli.",
+        "Alnı normalden çok geniş ve açık.", "Burnu basık ve geniş delikli (zenci tipi).",
+        "Sol kulağı kepçe, sağ kulağı normal.", "Sol yanağında derin gamze var.",
+        "Cildi aşırı esmer ve güneşte yanmış.", "Sağ şakağında belirgin bir arter şişliği.",
+        "Yüzünde çiçek hastalığından kalma çukurlar var.", "Cildinde yaygın sedef hastalığı plakları var.",
+        "Sol yanağında derin sivilce çukuru.", "Çene ucu ortadan ikiye yarık (gamzeli çene).",
+        "Alnı dar ve öne doğru çıkık.", "Burnu tamamen estetikli/küçük.",
+        "Her iki kulağı da normalden çok büyük.", "Yüz simetrisi sola doğru hafif kayık.",
+        "Elmacık kemikleri aşırı çıkık ve belirgin.", "Dudakları normalden aşırı kalın ve etli.",
+        "Yüzünde kalıcı güneş lekeleri var.", "Çene ucu çok sivri ve uzundur."
+    ]
+    ozellikler = np.random.choice(ozellik_havuzu + [None, None, None], size=adet)
+
+    # ---------------------------------------------------------
+    # 5. VERİLERİ ŞEMAYA GÖRE BİRLEŞTİRME VE DOSYALAMA
+    # ---------------------------------------------------------
+    print("-> Kolonlar SQL ana tablo şemasına göre diziliyor...")
+    df_ana = pd.DataFrame({
+        'TC_Kimlik': tc_nolar,
+        'Ad': isimler,
+        'Soyad': soyisimler,
+        'Göz_Rengi_Id': goz_secimleri,
+        'Dogum_Yılı': dogum_yillari,
+        'Boy': boylar,
+        'Parmak_İzi': parmak_izleri,
+        'Belirgin_Özellik': ozellikler,
+        'Dna': dnalar,
+        'Ayak_Numarası': ayak_numaralari,
+        'Kilo': kilolar,
+        'Suç_Kaydı_Id': suc_kayit_idleri,
+        'Plaka': plakalar,
+        'Kan_Grubu_Id': kan_grubu_idleri
+    })
+
+    dosya_adi = 'dbo_Zanli_Profiles.csv'
+    df_ana.to_csv(dosya_adi, index=False, encoding='utf-8')
+
+    bitis_zamani = time.time()
+    print(f"\n🎉 KUSURSUZ: Görsellerdeki tüm şablonlara tam bağımlı '{dosya_adi}' başarıyla üretildi!")
+    print(f"⏱️ Toplam Çalışma Süresi: {bitis_zamani - baslangic_zamani:.2f} saniye.")
+
+
+# Hatanın düzeltildiği ana tetikleyici:
+if __name__ == "__main__":
+    siralı_ve_tam_uyumlu_veri_uret(1000000)
